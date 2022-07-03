@@ -1,17 +1,16 @@
+from dataclasses import dataclass
+from typing import Dict, Type
+
+
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
 
-    def __init__(self, training_type: str,
-                 duration: float,
-                 distance: float,
-                 speed: float,
-                 calories: float
-                 ) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
 
     def get_message(self) -> str:
         """Возвращает строку сообщения"""
@@ -24,9 +23,9 @@ class InfoMessage:
 
 class Training:
     """Базовый класс тренировки."""
-    LEN_STEP = 0.65
-    M_IN_KM = 1000
-    TRAINING_TYPE = ''
+    LEN_STEP: float = 0.65
+    M_IN_KM: int = 1000
+    MINS_PER_HOUR: int = 60
 
     def __init__(self, action: int,
                  duration: float,
@@ -46,7 +45,8 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        pass
+        raise NotImplementedError(
+            'Определите get_spent_calories в %s' % (self.__class__.__name__))
 
     def show_training_info(self) -> InfoMessage:
         """Вернуть информационное сообщение о выполненной тренировке."""
@@ -60,9 +60,8 @@ class Training:
 
 class Running(Training):
     """Тренировка: бег."""
-    CAL_RUN_1 = 18
-    CAL_RUN_2 = 20
-    TRAINING_TYPE = 'RUN'
+    CAL_RUN_1: int = 18
+    CAL_RUN_2: int = 20
 
     def __init__(self, action: int,
                  duration: float,
@@ -72,14 +71,14 @@ class Running(Training):
 
     def get_spent_calories(self) -> float:
         return ((self.CAL_RUN_1 * self.get_mean_speed() - self.CAL_RUN_2)
-                * self.weight / self.M_IN_KM * self.duration * 60)
+                * self.weight / self.M_IN_KM
+                * self.duration * self.MINS_PER_HOUR)
 
 
 class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
-    CAL_WALK_1 = 0.035
-    CAL_WALK_2 = 0.029
-    TRAINING_TYPE = 'WLK'
+    CAL_WALK_1: float = 0.035
+    CAL_WALK_2: float = 0.029
 
     def __init__(self, action: int,
                  duration: float,
@@ -92,15 +91,15 @@ class SportsWalking(Training):
     def get_spent_calories(self) -> float:
         return ((self.CAL_WALK_1 * self.weight
                 + (self.get_mean_speed()**2 // self.height)
-                * self.CAL_WALK_2 * self.weight) * self.duration * 60)
+                * self.CAL_WALK_2 * self.weight)
+                * self.duration * self.MINS_PER_HOUR)
 
 
 class Swimming(Training):
     """Тренировка: плавание."""
-    LEN_STEP = 1.38
-    CAL_SWIM_1 = 1.1
-    CAL_SWIM_2 = 2
-    TRAINING_TYPE = 'SWM'
+    LEN_STEP: float = 1.38
+    CAL_SWIM_1: float = 1.1
+    CAL_SWIM_2: int = 2
 
     def __init__(self, action: int,
                  duration: float,
@@ -124,8 +123,14 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    dict_train = {'SWM': Swimming, 'RUN': Running, 'WLK': SportsWalking}
-    return dict_train[workout_type](*data)
+    name_train: Dict[str, Type[training]] = {
+        'SWM': Swimming,
+        'RUN': Running,
+        'WLK': SportsWalking}
+    if workout_type in name_train:
+        return name_train[workout_type](*data)
+    else:
+        raise ValueError('Данной тренировки не существует')
 
 
 def main(training: Training) -> None:
