@@ -63,12 +63,6 @@ class Running(Training):
     CAL_RUN_1: int = 18
     CAL_RUN_2: int = 20
 
-    def __init__(self, action: int,
-                 duration: float,
-                 weight: float
-                 ) -> None:
-        super().__init__(action, duration, weight)
-
     def get_spent_calories(self) -> float:
         return ((self.CAL_RUN_1 * self.get_mean_speed() - self.CAL_RUN_2)
                 * self.weight / self.M_IN_KM
